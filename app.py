@@ -32,8 +32,15 @@ def init_session_state():
 
 init_session_state()
 
-# API 키 자동 로드 및 클라이언트 초기화 (사이드바 입력창 제거)
-api_key = os.getenv("OPENAI_API_KEY", "").strip()
+# 사이드바 API 키 입력란 (기존 방식 복구)
+default_key = os.getenv("OPENAI_API_KEY", "").strip()
+api_key = st.sidebar.text_input(
+    "OpenAI API Key", 
+    value=default_key, 
+    type="password", 
+    key="openai_api_key_sidebar"
+).strip()
+
 client = OpenAI(api_key=api_key) if api_key else None
 
 # ==========================================
@@ -61,7 +68,7 @@ def process_uploaded_file(uploaded_file):
 
 def parse_vocabulary_with_ai(images):
     if not client:
-        st.error(".env 파일에 OPENAI_API_KEY가 설정되지 않았습니다.")
+        st.error("사이드바에 API Key를 입력해주세요.")
         return None
     prompt = (
         "이미지 내의 표에서 약어(abbr), 영문 풀네임(full_name), 한국어 뜻(meaning)을 추출해. "
@@ -84,11 +91,11 @@ def parse_vocabulary_with_ai(images):
 st.title("🚢 전문 용어 주관식 퀴즈")
 
 if not st.session_state.quiz_started:
-    st.info("💡 PDF 또는 이미지 단어장을 업로드해 주세요. (API 키는 자동으로 적용됩니다.)")
+    st.info("💡 사이드바에 API 키를 입력한 후, PDF 또는 이미지 단어장을 업로드해 주세요.")
     uploaded_file = st.file_uploader("파일 업로드", type=["pdf", "jpg", "png"])
     if uploaded_file and st.button("🚀 퀴즈 시작", use_container_width=True):
         if not api_key:
-            st.error("잠깐! .env 파일에 OpenAI API 키를 입력해 주세요.")
+            st.error("사이드바에 OpenAI API 키를 입력해 주세요.")
         else:
             with st.spinner("📦 AI가 단어장을 분석하고 있습니다..."):
                 images = process_uploaded_file(uploaded_file)
